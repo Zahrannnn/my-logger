@@ -43,31 +43,6 @@ npx skills add Zahrannnn/my-logger
 
 Interactive installer. Select your agents (Claude Code, Cursor, Codex, etc.) and it places SKILL.md in the right directory.
 
-### Claude Code (git clone)
-
-```bash
-git clone https://github.com/Zahrannnn/my-logger.git ~/.claude/skills/my-logger
-```
-
-### Cursor
-
-```bash
-# Per-project rule (most reliable)
-mkdir -p .cursor/rules
-# Copy plugins/my-logger/skills/my-logger/SKILL.md into .cursor/rules/my-logger.mdc
-# with alwaysApply: true in frontmatter
-```
-
-### Other tools (Codex, Antigravity, OpenCode)
-
-Clone the repo and copy the adapter files:
-
-```bash
-git clone https://github.com/Zahrannnn/my-logger.git /tmp/my-logger
-# Claude Code: copy .claude-plugin/* and plugins/ to ~/.claude/
-# Codex: see adapters/codex/
-# Cursor: see adapters/cursor/
-```
 
 ## Setup
 
