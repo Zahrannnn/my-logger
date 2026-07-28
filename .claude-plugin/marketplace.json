@@ -1,0 +1,12 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "Zahrannnn-my-logger",
+  "description": "Activity logging skill for Claude Code — submit, edit, delete, and sweep weekly time entries via any REST API",
+  "owner": { "name": "Zahrann" },
+  "plugins": [{
+    "name": "my-logger",
+    "source": "./plugins/my-logger",
+    "description": "Log work to activity tracking APIs. Six flows: init, submit, edit, delete, status, helpme.",
+    "version": "1.0.0"
+  }]
+}

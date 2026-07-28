@@ -1,0 +1,9 @@
+{
+  "name": "my-logger",
+  "version": "1.0.0",
+  "description": "Log work to activity tracking APIs via Claude Code, Cursor, Codex, and other AI tools",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}
