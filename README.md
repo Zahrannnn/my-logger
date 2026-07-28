@@ -35,6 +35,14 @@ Agent: Shows Sun-Thu gaps → prompts for holidays → builds role-themed filler
 /plugin install my-logger@Zahrannnn-my-logger
 ```
 
+### Any AI tool (npx skills)
+
+```bash
+npx skills add Zahrannnn/my-logger
+```
+
+Interactive installer. Select your agents (Claude Code, Cursor, Codex, etc.) and it places SKILL.md in the right directory.
+
 ### Claude Code (git clone)
 
 ```bash
