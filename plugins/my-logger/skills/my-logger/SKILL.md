@@ -1,11 +1,12 @@
 ---
 name: my-logger
-description: Log work to any activity tracking API. Submit, edit, delete, list daily activities, or run a weekly gap-sweep (helpme). Triggers "/my-logger", "my-logger init", "my-logger helpme", "log my activities".
+description: Log work to Corelia activity tracker. Submit, edit, delete, list daily activities, or run a weekly gap-sweep (helpme). Triggers "/my-logger", "my-logger init", "my-logger helpme", "log my activities".
+origin: CORELIA
 ---
 
 # My Logger
 
-Submit work to any activity tracking API via six flows: init, submit, edit, delete, status, helpme. No filesystem scan, no external model.
+Submit work to Corelia's `/activities` API via six flows: init, submit, edit, delete, status, helpme. No filesystem scan, no external model.
 
 ## When to Activate
 
@@ -28,9 +29,9 @@ Fields: `apiBase`, `email`, `password`, `role`, `userId`, `defaultProjectId`, `d
 
 ## VPN Preflight — Automatic
 
-The API server is expected to be internal to the user's office network. Every helper script calls `Assert-MyLoggerVpn` before login. The probe handles 4xx/5xx HTTP responses gracefully (server reachable but rejected empty login body) — only genuine connection failures (timeout, DNS, refused) trigger the `UNREACHABLE` error.
+The API server `http://10.100.102.6:3000` is internal to the Egyptian office network. Every helper script calls `Assert-MyLoggerVpn` before login. The probe handles 4xx/5xx HTTP responses gracefully (server reachable but rejected empty login body) — only genuine connection failures (timeout, DNS, refused) trigger the `UNREACHABLE` error.
 
-Do NOT ask user about VPN status before running helpers. Just run the helper. If it throws `UNREACHABLE`, surface the error verbatim and ask user to connect to their office VPN, then retry. No pre-emptive VPN prompts.
+Do NOT ask user about VPN status before running helpers. Just run the helper. If it throws `UNREACHABLE`, surface the error verbatim and ask user to connect to the Egyptian VPN, then retry. No pre-emptive VPN prompts.
 
 ## Helper Scripts
 
@@ -47,7 +48,7 @@ Script reference:
 
 ## API Endpoints Used
 
-Base path: `settings.apiBase`.
+Base path: `settings.apiBase` (default `http://10.100.102.6:3000/api/v1`).
 
 | Method | Path | Flow |
 |---|---|---|
@@ -67,13 +68,13 @@ First-time setup. Run once.
 1. **VPN preflight** — automatic (see above).
 2. Run: `pwsh "$scriptsDir\my-init.ps1" -Intent template` -> get blank config schema (stdout: JSON).
 3. Prompt user for each field:
-   - `apiBase` (the API base URL for your activity tracker)
+   - `apiBase` (default `http://10.100.102.6:3000/api/v1` — local server, needs Egyptian VPN)
    - `email`
    - `password`
    - `role` (single select: FE / BE / AI / Mobile / PM / Data / QA / DevOps / Security)
    - `totalHours` (default 9)
    - `workdayStartLocal` (default 09:00), `workdayEndLocal` (default 18:00)
-   - `timezoneId` (your local timezone, e.g. `Egypt Standard Time`, `Eastern Standard Time`)
+   - `timezoneId` (default `Egypt Standard Time`)
 4. Run: `pwsh "$scriptsDir\my-init.ps1" -Intent save -ConfigJSON '<json with above fields>'`.
 5. Script logs in, fetches projects (validates password), writes `settings.json`.
 6. Script returns JSON with `projects` array.
@@ -159,7 +160,7 @@ Week sweep. Computes gaps for Sun-Thu and fills each day to reach `totalHours` (
 6. If `settings.role` is empty, prompt user for role (single select: FE / BE / AI / Mobile / PM / Data / QA / DevOps / Security). Suggest updating settings via `/my-logger init` next time.
 7. For each day with `gap > 0`:
    - **Monday + `hasMeeting = false`**: add Weekly Team Meeting item `{title:"Weekly Team Meeting", notes:"Weekly sync with team", projectId:settings.defaultProjectId, hours:1, startTimeLocal:"12:00"}`. Subtract 1h from remaining gap.
-   - **Remaining gap**: split across 1-3 filler tasks themed per weekday (see Role Themes table below). Each filler: `projectId: settings.fillerProjectId`. `hours` sum to remaining gap. Rotate themes across days so no two days share identical task titles.
+   - **Remaining gap**: split across 1-3 filler tasks themed per weekday (see Role Themes table below). Each filler: `projectId: settings.fillerProjectId` (default 23). `hours` sum to remaining gap. Rotate themes across days so no two days share identical task titles.
 8. Build `PlanJSON`:
    ```json
    {
@@ -234,4 +235,4 @@ Existing activities are immutable. The agent MUST NOT delete or re-post existing
 - No projects returned -> suggest `/my-logger init` again or check API permissions.
 - POST fails for one item -> script returns it in `failed[]`, agent reports, ask retry.
 - Script throws PowerShell error -> show raw error, suggest inspecting settings file.
-- `UNREACHABLE` error -> tell user to connect to their office VPN, retry same command.
+- `UNREACHABLE` error -> tell user to connect to Egyptian VPN, retry same command.

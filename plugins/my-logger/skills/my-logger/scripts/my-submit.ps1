@@ -15,7 +15,7 @@ $token = $loginResponse.data.token
 if (-not $token) { throw "Login failed." }
 
 if ($Intent -eq "helpme") {
-    $tz = [string]($settings.timezoneId ?? "UTC")
+    $tz = [string]($settings.timezoneId ?? "Egypt Standard Time")
     $tzInfo = [System.TimeZoneInfo]::FindSystemTimeZoneById($tz)
     $todayLocal = [System.TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $tzInfo).Date
     $sundayOffset = ([int]$todayLocal.DayOfWeek + 6) % 7
@@ -70,7 +70,7 @@ if ($Intent -eq "helpme") {
         weekStart = $weekStart.ToString("yyyy-MM-dd")
         role = [string]$settings.role
         defaultProjectId = $settings.defaultProjectId
-        fillerProjectId = [int]($settings.fillerProjectId ?? 0)
+        fillerProjectId = [int]($settings.fillerProjectId ?? 23)
         totalHours = $totalHours
         days = $days
     })
@@ -91,7 +91,7 @@ if ($Intent -eq "gather") {
             role = [string]$settings.role
             defaultProjectId = $settings.defaultProjectId
             defaultProjectName = $settings.defaultProjectName
-            fillerProjectId = [int]($settings.fillerProjectId ?? 0)
+            fillerProjectId = [int]($settings.fillerProjectId ?? 23)
             totalHours = $settings.totalHours
             workdayStartLocal = $settings.workdayStartLocal
             timezoneId = $settings.timezoneId

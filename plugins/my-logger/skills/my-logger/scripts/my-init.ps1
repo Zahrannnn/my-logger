@@ -9,7 +9,7 @@ $apiScript = Join-Path $PSScriptRoot "my-api.ps1"
 
 if ($Intent -eq "template") {
 Write-MyJsonOut -Object ([pscustomobject]@{
-    apiBase = "http://your-server:3000/api/v1"
+    apiBase = "http://10.100.102.6:3000/api/v1"
     email = ""
     password = ""
     role = ""
@@ -20,9 +20,9 @@ Write-MyJsonOut -Object ([pscustomobject]@{
     totalHours = 9
     workdayStartLocal = "09:00"
     workdayEndLocal = "18:00"
-    timezoneId = "UTC"
+    timezoneId = "Egypt Standard Time"
     maxActivities = 3
-    fillerProjectId = 0
+    fillerProjectId = 23
 })
     return
 }
@@ -47,9 +47,9 @@ $bootSettings = [pscustomobject]@{
     totalHours = [double]($config.totalHours ?? 9)
     workdayStartLocal = [string]($config.workdayStartLocal ?? "09:00")
     workdayEndLocal = [string]($config.workdayEndLocal ?? "18:00")
-    timezoneId = [string]($config.timezoneId ?? "UTC")
+    timezoneId = [string]($config.timezoneId ?? "Egypt Standard Time")
     maxActivities = [int]($config.maxActivities ?? 3)
-    fillerProjectId = [int]($config.fillerProjectId ?? 0)
+    fillerProjectId = [int]($config.fillerProjectId ?? 23)
 }
 
 $loginResponse = Invoke-MyLogin -Settings $bootSettings

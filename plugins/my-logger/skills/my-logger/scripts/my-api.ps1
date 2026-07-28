@@ -39,7 +39,7 @@ function Assert-MyLoggerVpn {
     param([object]$Settings)
 
     if (-not (Test-MyLoggerReachable -Settings $Settings)) {
-        throw "UNREACHABLE: $($Settings.apiBase) - server not reachable. Check your VPN connection and ensure the API server is accessible."
+        throw "UNREACHABLE: $($Settings.apiBase) — connect to the Egyptian VPN first, then retry."
     }
 }
 
@@ -172,7 +172,7 @@ function Build-MyActivityObjects {
         [switch]$LiteralHours
     )
 
-    $tz = [string]($Settings.timezoneId ?? "UTC")
+    $tz = [string]($Settings.timezoneId ?? "Egypt Standard Time")
     $start = [string]($Settings.workdayStartLocal ?? "09:00")
     $totalHours = [double]($Settings.totalHours ?? 9)
     $totalMinutes = [int]($totalHours * 60)
@@ -263,7 +263,7 @@ function Filter-ActivitiesByDate {
     param(
         [object[]]$Activities,
         [string]$DateText,
-        [string]$TimeZoneId = "UTC"
+        [string]$TimeZoneId = "Egypt Standard Time"
     )
 
     $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById($TimeZoneId)
@@ -295,7 +295,7 @@ function Get-MyDayActivitiesJson {
     $all = Get-MyUserActivities -Settings $Settings -Token $Token
     $items = @($all.data)
     if ($items.Count -eq 0) { $items = @($all) }
-    $tz = [string]($Settings.timezoneId ?? "UTC")
+    $tz = [string]($Settings.timezoneId ?? "Egypt Standard Time")
     $dayItems = Filter-ActivitiesByDate -Activities $items -DateText $DateText -TimeZoneId $tz
     @($dayItems | ForEach-Object {
         [pscustomobject]@{
