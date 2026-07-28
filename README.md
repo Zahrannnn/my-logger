@@ -6,7 +6,7 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-orange)](https://claude.com/claude-code)
 [![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue)](https://learn.microsoft.com/en-us/powershell/)
 
-Log your AI-assisted work to any activity tracking API. Six flows (init, submit, edit, delete, status, helpme) cover the full daily workflow without leaving your terminal.
+Log your AI-assisted work to any activity tracking API. Five flows (init, submit, edit, delete, status) cover the daily workflow without leaving your terminal.
 
 Works with Claude Code, Cursor, Codex, and any AI tool that can invoke PowerShell scripts.
 
@@ -19,12 +19,7 @@ User: Fixed the auth middleware bug and wrote tests
 Agent: Drafts 2 tasks → confirms → posts → reports
 ```
 
-Or for a weekly gap sweep:
 
-```
-User: /my-logger helpme
-Agent: Shows Sun-Thu gaps → prompts for holidays → builds role-themed filler plan → posts everything
-```
 
 ## Installation
 
@@ -61,7 +56,6 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 | Edit | Change title/notes/projectId of existing entries |
 | Delete | Remove wrong entries |
 | Status | List today's logged time |
-| Helpme | Sweep the week Sun-Thu, fill gaps with role-themed research tasks |
 | No overlap deletion | Builder auto-stacks new items after existing ones |
 
 ## Typical vs With Skill
@@ -70,7 +64,6 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 |--------|-------------------|----------------|
 | Logging workflow | Switch context to browser, open tracker UI, fill form manually | Stay in terminal, AI drafts from conversation, one-confirm posting |
 | Daily tracking | Manual hour-by-hour recollection at end of day | AI mines tool calls and edits from session context |
-| Weekly gap sweep | Open spreadsheet, calculate remaining hours per day | One command computes gaps, drafts role-themed fillers, posts all 5 days |
 | Time overlap handling | Delete and re-sequence existing entries | Auto-stack after last existing activity |
 | Multi-day task splits | Create separate entries across tabs/forms | One task with hours weighted per day |
 
@@ -90,7 +83,7 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 
 - **JSON-only script output** — every helper script emits a single JSON object to stdout. No Write-Host prose. The AI agent parses JSON and drives all user prompts. This makes the skill tool-agnostic (works with Claude Code, Cursor, Codex, etc.).
 - **Nothing deleted automatically** — the overlap avoidance rule ("Never Delete to Resolve Time Overlaps") is the most important invariant. The builder stacks new items after existing ones. Users explicitly request deletion.
-- **Proportional hours by default** — items get weighted minutes proportional to their `hours` field. The `literalHours: true` flag in PlanJSON switches to exact-minute allocation for the helpme flow where precision matters.
+- **Proportional hours by default** — items get weighted minutes proportional to their `hours` field.
 - **Credential in settings file** — password stored in `~/.config/my-logger/settings.json` by user choice. No env vars, no keychain. The agent never sees the password (scripts read it directly).
 
 ## Limitations
@@ -99,7 +92,6 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 - Only works with the `/activities`, `/projects`, and `/users/login` REST API pattern. Your tracker must match these endpoints.
 - Edit flow limited to title/notes/projectId — time edits require delete + re-post.
 - No batch delete or bulk operations.
-- Weekly sweep assumes Sun-Thu workweek with configurable total hours.
 
 ## Dependencies
 
@@ -115,11 +107,11 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 - Token acquired fresh per script invocation (never cached to disk)
 - Overlapping time slots auto-resolved via cursor stacking (no data loss)
 - Failed POSTs return structured error objects with HTTP error messages
-- Helpme flow supports holiday exclusion with gap recalculation
+
 
 ## Version History
 
-- **1.0.0** — Initial release. 6 flows, role-themed sweep, literal/proportional hours, overlap-safe builder.
+- **1.0.0** — Initial release. 5 flows, literal/proportional hours, overlap-safe builder.
 
 ## License
 
