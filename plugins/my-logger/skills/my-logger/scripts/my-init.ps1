@@ -65,7 +65,8 @@ if ($loginResponse.data.user -and $loginResponse.data.user.id) {
 }
 
 $projectsResponse = Get-MyProjects -Settings $bootSettings -Token $token
-$allProjects = @($projectsResponse.data)
+$allProjects = @($projectsResponse.data.projects)
+if ($allProjects.Count -eq 0) { $allProjects = @($projectsResponse.data) }
 if ($allProjects.Count -eq 0) { $allProjects = @($projectsResponse) }
 
 $projects = @($allProjects | ForEach-Object {

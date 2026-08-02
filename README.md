@@ -111,6 +111,7 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 
 ## Version History
 
+- **1.1.1** — Submit-flow bugfixes: empty `$Date` param no longer breaks gather, projects response shape handled (`data.projects`).
 - **1.1.0** — API base preflight: probes public IP `41.33.149.212:3000` first, falls back to internal `10.100.102.6:3000` (Egyptian VPN), `BACKEND_DOWN` escalation with support contacts.
 - **1.0.0** — Initial release. 5 flows, literal/proportional hours, overlap-safe builder.
 
