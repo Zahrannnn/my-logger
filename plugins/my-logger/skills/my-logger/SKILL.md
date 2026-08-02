@@ -89,7 +89,7 @@ First-time setup. Run once.
 1. **API preflight** — automatic (see "API Base Preflight — Automatic" above). On success, surface the public/internal `message` verbatim. On `BACKEND_DOWN`, follow the escalation.
 2. Run: `pwsh "$scriptsDir\my-init.ps1" -Intent template` -> get blank config schema (stdout: JSON).
 3. Prompt user for each field:
-   - `apiBase` (default `http://41.33.149.212:3000/api/v1` — public server; preflight falls back to internal `http://10.100.102.6:3000/api/v1` on Egyptian VPN)
+   - `apiBase` — do NOT prompt. Auto-resolved at runtime by preflight (public `http://41.33.149.212:3000/api/v1`, fallback internal `http://10.100.102.6:3000/api/v1`). Template default is the public base.
    - `email`
    - `password`
    - `role` (single select: FE / BE / AI / Mobile / PM / Data / QA / DevOps / Security)

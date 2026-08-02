@@ -73,8 +73,7 @@ function Resolve-MyLoggerApiBase {
 function Invoke-MyLogin {
     param([object]$Settings)
 
-    $resolved = Resolve-MyLoggerApiBase -Settings $Settings
-    $Settings.apiBase = $resolved.apiBase
+    Resolve-MyLoggerApiBase -Settings $Settings | Out-Null
 
     $body = @{
         email = [string]$Settings.email
