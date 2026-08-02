@@ -71,7 +71,7 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 
 | Step | What happens |
 |------|-------------|
-| 1. Preflight | Script pings API server. If unreachable, tells user to connect VPN |
+| 1. Preflight | Probes public IP `41.33.149.212:3000`, falls back to internal `10.100.102.6:3000`. If both unreachable, surfaces `BACKEND_DOWN` with VPN guidance and support contacts |
 | 2. Gather | Fetches existing activities + projects for the day |
 | 3. Draft | AI mines conversation for tool calls matching the task description |
 | 4. Confirm | Shows draft table, prompts for day and hour weights |
@@ -96,14 +96,14 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 ## Dependencies
 
 - **PowerShell 5.1+** (required). Ships with Windows; installable on macOS/Linux.
-- **VPN connection** (if your API server is on a private network). The preflight check detects unreachable servers and halts gracefully.
+- **VPN connection** (only for internal fallback). Preflight tries the public API first; VPN is only needed if the public IP is down and the user must reach `10.100.102.6:3000`.
 - **A REST activity tracking API** implementing the documented endpoints.
 
 ## Quality Checklist
 
 - All scripts emit parseable JSON to stdout only
 - Error messages go to stderr, never mixed into JSON output
-- VPN preflight runs before every API call, not just on first login
+- API base preflight (public → internal) runs before every API call, not just on first login
 - Token acquired fresh per script invocation (never cached to disk)
 - Overlapping time slots auto-resolved via cursor stacking (no data loss)
 - Failed POSTs return structured error objects with HTTP error messages
@@ -111,6 +111,7 @@ Answer prompts for your API endpoint, email, password, and role. The init flow l
 
 ## Version History
 
+- **1.1.0** — API base preflight: probes public IP `41.33.149.212:3000` first, falls back to internal `10.100.102.6:3000` (Egyptian VPN), `BACKEND_DOWN` escalation with support contacts.
 - **1.0.0** — Initial release. 5 flows, literal/proportional hours, overlap-safe builder.
 
 ## License

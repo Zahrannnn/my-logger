@@ -1,7 +1,7 @@
 {
   "name": "my-logger",
   "description": "Log work to activity tracking APIs. Six flows: init, submit, edit, delete, status, helpme.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": { "name": "Zahrann" },
   "repository": "https://github.com/Zahrannnn/my-logger",
   "license": "MIT",

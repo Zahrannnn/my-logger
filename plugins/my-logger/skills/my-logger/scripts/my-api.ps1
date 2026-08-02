@@ -27,26 +27,54 @@ function Load-MyLoggerSettings {
     Read-MyJson -Path $path
 }
 
+function Get-MyLoggerPublicBase   { "http://41.33.149.212:3000/api/v1" }
+function Get-MyLoggerInternalBase { "http://10.100.102.6:3000/api/v1"   }
+
 function Test-MyLoggerReachable {
-    param([object]$Settings)
+    param([string]$ApiBase)
     try {
-        Invoke-WebRequest -Uri "$($Settings.apiBase)/users/login" -Method Post -ContentType "application/json" -Body '{}' -TimeoutSec 5 -UseBasicParsing -SkipHttpErrorCheck -ErrorAction Stop | Out-Null
+        Invoke-WebRequest -Uri "$ApiBase/users/login" -Method Post -ContentType "application/json" -Body '{}' -TimeoutSec 5 -UseBasicParsing -SkipHttpErrorCheck -ErrorAction Stop | Out-Null
         return $true
     } catch { return $false }
 }
 
-function Assert-MyLoggerVpn {
+function Resolve-MyLoggerApiBase {
     param([object]$Settings)
 
-    if (-not (Test-MyLoggerReachable -Settings $Settings)) {
-        throw "UNREACHABLE: $($Settings.apiBase) — connect to the Egyptian VPN first, then retry."
+    $publicBase = Get-MyLoggerPublicBase
+    if (Test-MyLoggerReachable -ApiBase $publicBase) {
+        $Settings.apiBase = $publicBase
+        return [pscustomobject]@{
+            reachable  = $true
+            endpoint   = "public"
+            apiBase    = $publicBase
+            publicIp   = "41.33.149.212"
+            publicPort = 3000
+            message    = "API reachable on public IP 41.33.149.212:3000"
+        }
     }
+
+    $internalBase = Get-MyLoggerInternalBase
+    if (Test-MyLoggerReachable -ApiBase $internalBase) {
+        $Settings.apiBase = $internalBase
+        return [pscustomobject]@{
+            reachable  = $true
+            endpoint   = "internal"
+            apiBase    = $internalBase
+            publicIp   = $null
+            publicPort = $null
+            message    = "API reachable on internal IP 10.100.102.6:3000 (Egyptian VPN)"
+        }
+    }
+
+    throw "BACKEND_DOWN: Cannot reach API on public ($publicBase) or internal ($internalBase). Connect to the Egyptian VPN and retry. If still failing, the back-end may be down — contact Ahmed Kamal (Backend Engineer) AKA@corelia.ai or Abdo (Frontend Engineer) AUM@corelia.ai."
 }
 
 function Invoke-MyLogin {
     param([object]$Settings)
 
-    Assert-MyLoggerVpn -Settings $Settings
+    $resolved = Resolve-MyLoggerApiBase -Settings $Settings
+    $Settings.apiBase = $resolved.apiBase
 
     $body = @{
         email = [string]$Settings.email

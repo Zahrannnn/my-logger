@@ -9,6 +9,13 @@ $ErrorActionPreference = "Stop"
 $apiScript = Join-Path $PSScriptRoot "my-api.ps1"
 . $apiScript -LibraryOnly
 
+if ($Intent -eq "preflight") {
+    $dummy = [pscustomobject]@{ apiBase = "" }
+    $info = Resolve-MyLoggerApiBase -Settings $dummy
+    Write-MyJsonOut -Object $info
+    return
+}
+
 $settings = Load-MyLoggerSettings
 $loginResponse = Invoke-MyLogin -Settings $settings
 $token = $loginResponse.data.token
@@ -140,4 +147,4 @@ if ($Intent -eq "post") {
     return
 }
 
-throw "Unknown intent: $Intent. Use 'gather', 'post', or 'helpme'."
+throw "Unknown intent: $Intent. Use 'preflight', 'gather', 'post', or 'helpme'."
