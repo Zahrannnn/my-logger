@@ -1,6 +1,6 @@
 {
   "name": "my-logger",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Log work to activity tracking APIs via Claude Code, Cursor, Codex, and other AI tools",
   "private": true,
   "scripts": {

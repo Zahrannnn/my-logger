@@ -86,10 +86,11 @@ if ($Intent -eq "helpme") {
 
 if ($Intent -eq "gather") {
     $projects = Get-MyProjects -Settings $settings -Token $token
-    $projectList = @($projects.data)
+    $projectList = @($projects.data.projects)
+    if ($projectList.Count -eq 0) { $projectList = @($projects.data) }
     if ($projectList.Count -eq 0) { $projectList = @($projects) }
 
-    $targetDate = $Date ?? (Get-Date).ToString("yyyy-MM-dd")
+    $targetDate = if ($Date) { $Date } else { (Get-Date).ToString("yyyy-MM-dd") }
     $existing = Get-MyDayActivitiesJson -Settings $settings -Token $token -DateText $targetDate
 
     Write-MyJsonOut -Object ([pscustomobject]@{
