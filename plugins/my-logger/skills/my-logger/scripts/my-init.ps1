@@ -9,7 +9,7 @@ $apiScript = Join-Path $PSScriptRoot "my-api.ps1"
 
 if ($Intent -eq "template") {
 Write-MyJsonOut -Object ([pscustomobject]@{
-    apiBase = "http://10.100.102.6:3000/api/v1"
+    apiBase = "http://41.33.149.212:3000/api/v1"
     email = ""
     password = ""
     role = ""

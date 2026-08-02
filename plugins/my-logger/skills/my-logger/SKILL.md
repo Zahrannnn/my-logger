@@ -27,11 +27,32 @@ Single file holds identity, credentials, role, and project list. Password lives 
 
 Fields: `apiBase`, `email`, `password`, `role`, `userId`, `defaultProjectId`, `defaultProjectName`, `projects`, `totalHours`, `workdayStartLocal`, `workdayEndLocal`, `timezoneId`, `maxActivities`, `fillerProjectId`.
 
-## VPN Preflight — Automatic
+## API Base Preflight — Automatic
 
-The API server `http://10.100.102.6:3000` is internal to the Egyptian office network. Every helper script calls `Assert-MyLoggerVpn` before login. The probe handles 4xx/5xx HTTP responses gracefully (server reachable but rejected empty login body) — only genuine connection failures (timeout, DNS, refused) trigger the `UNREACHABLE` error.
+Every helper script calls `Resolve-MyLoggerApiBase` before login. The resolver probes in order:
 
-Do NOT ask user about VPN status before running helpers. Just run the helper. If it throws `UNREACHABLE`, surface the error verbatim and ask user to connect to the Egyptian VPN, then retry. No pre-emptive VPN prompts.
+1. **Public base** `http://41.33.149.212:3000/api/v1`. If reachable, `settings.apiBase` is set to public and the resolver returns `{reachable:true, endpoint:"public", apiBase, publicIp:"41.33.149.212", publicPort:3000, message:"API reachable on public IP 41.33.149.212:3000"}`. Surface the message verbatim so the user knows the current public IP.
+2. If public fails, **internal base** `http://10.100.102.6:3000/api/v1` (Egyptian office network, reachable only via the Egyptian VPN). If reachable, `settings.apiBase` is set to internal and the resolver returns `{reachable:true, endpoint:"internal", apiBase, publicIp:null, publicPort:null, message:"API reachable on internal IP 10.100.102.6:3000 (Egyptian VPN)"}`. Surface verbatim.
+3. If both fail, the resolver throws `BACKEND_DOWN` with the escalation message.
+
+To capture the structured reachability info separately, run the preflight intent:
+
+```
+pwsh "$scriptsDir\my-submit.ps1" -Intent preflight
+```
+
+It returns the resolver JSON on success or throws `BACKEND_DOWN`. Use this to display the current public IP before running any flow.
+
+### When `BACKEND_DOWN` is thrown
+
+Do NOT pre-emptively ask the user about VPN status before running helpers. Run `preflight` first; only address VPN when the resolver throws `BACKEND_DOWN`. Then:
+
+- Surface the error verbatim: "Cannot reach API on public (http://41.33.149.212:3000) or internal (http://10.100.102.6:3000) IP."
+- Ask the user: "Are you connected to the Egyptian VPN?"
+  - If NO — tell the user to connect to the Egyptian VPN, then re-run `-Intent preflight`.
+  - If YES (or already retried after connecting) — the back-end is down. Surface verbatim: "Back-end is down. Contact Ahmed Kamal (Backend Engineer) AKA@corelia.ai or Abdo (Frontend Engineer) AUM@corelia.ai."
+
+The probe handles 4xx/5xx HTTP responses gracefully (server reachable but rejected empty login body) — only genuine connection failures (timeout, DNS, refused) trigger the `BACKEND_DOWN` error.
 
 ## Helper Scripts
 
@@ -43,12 +64,12 @@ Script reference:
 |---|---|---|
 | `my-api.ps1` | Library. Dot-source with `-LibraryOnly`. Exposes all HTTP helpers, `Build-MyActivityObjects`, `Get-MyDayActivitiesJson`, `Write-MyJsonOut`. | — |
 | `my-init.ps1` | First-time setup. | `template` prints blank config. `save` logs in, fetches projects, writes `settings.json`. |
-| `my-submit.ps1` | Post activities. | `gather` prints settings + projects + today's existing activities. `post` accepts `PlanJSON` (days to items, optional `literalHours: true`) and posts each. `helpme` sweeps Sun-Thu week gaps and emits a plan skeleton. |
+| `my-submit.ps1` | Post activities. | `preflight` resolves and returns the active API base (public/internal). `gather` prints settings + projects + today's existing activities. `post` accepts `PlanJSON` (days to items, optional `literalHours: true`) and posts each. `helpme` sweeps Sun-Thu week gaps and emits a plan skeleton. |
 | `my-edit.ps1` | Manage existing activities. | `list` prints today's activities. `patch` accepts `Id` + `FieldsJSON`. `remove` accepts `Id` and DELETEs. |
 
 ## API Endpoints Used
 
-Base path: `settings.apiBase` (default `http://10.100.102.6:3000/api/v1`).
+Base path: chosen at runtime by `Resolve-MyLoggerApiBase` from public `http://41.33.149.212:3000/api/v1` or internal `http://10.100.102.6:3000/api/v1`. Persisted into `settings.apiBase` for the rest of the script call.
 
 | Method | Path | Flow |
 |---|---|---|
@@ -65,10 +86,10 @@ All examples use synthetic data.
 
 First-time setup. Run once.
 
-1. **VPN preflight** — automatic (see above).
+1. **API preflight** — automatic (see "API Base Preflight — Automatic" above). On success, surface the public/internal `message` verbatim. On `BACKEND_DOWN`, follow the escalation.
 2. Run: `pwsh "$scriptsDir\my-init.ps1" -Intent template` -> get blank config schema (stdout: JSON).
 3. Prompt user for each field:
-   - `apiBase` (default `http://10.100.102.6:3000/api/v1` — local server, needs Egyptian VPN)
+   - `apiBase` — do NOT prompt. Auto-resolved at runtime by preflight (public `http://41.33.149.212:3000/api/v1`, fallback internal `http://10.100.102.6:3000/api/v1`). Template default is the public base.
    - `email`
    - `password`
    - `role` (single select: FE / BE / AI / Mobile / PM / Data / QA / DevOps / Security)
@@ -86,7 +107,7 @@ First-time setup. Run once.
 
 The default flow.
 
-1. **VPN preflight** — automatic.
+1. **API preflight** — run `pwsh "$scriptsDir\my-submit.ps1" -Intent preflight` first. On success, surface the returned `message` verbatim (e.g., "API reachable on public IP 41.33.149.212:3000"). On `BACKEND_DOWN`, follow the escalation in the "API Base Preflight — Automatic" section above before continuing.
 2. Run: `pwsh "$scriptsDir\my-submit.ps1" -Intent gather` -> JSON: settings, today's date, projects list, existing activities for today.
 3. Parse, show user: "Today is YYYY-MM-DD. You already have N activity items: [...]. Projects available: [...]"
 4. Prompt user: "Main task today? (one line describing the primary thing you worked on)".
@@ -119,7 +140,7 @@ The default flow.
 
 ## Flow 3: `/my-logger edit` or "edit my activity"
 
-1. **VPN preflight** — automatic.
+1. **API preflight** — run `pwsh "$scriptsDir\my-submit.ps1" -Intent preflight` first. On success, surface the returned `message` verbatim (e.g., "API reachable on public IP 41.33.149.212:3000"). On `BACKEND_DOWN`, follow the escalation in the "API Base Preflight — Automatic" section above before continuing.
 2. Run: `pwsh "$scriptsDir\my-edit.ps1" -Intent list -Date YYYY-MM-DD` (default today) -> today's activities.
 3. Show numbered list. Prompt user which to edit.
 4. Prompt which fields to change (title/notes/projectId — NOT time). Ask new values.
@@ -128,7 +149,7 @@ The default flow.
 
 ## Flow 4: `/my-logger delete` or "delete my activity"
 
-1. **VPN preflight** — automatic.
+1. **API preflight** — run `pwsh "$scriptsDir\my-submit.ps1" -Intent preflight` first. On success, surface the returned `message` verbatim (e.g., "API reachable on public IP 41.33.149.212:3000"). On `BACKEND_DOWN`, follow the escalation in the "API Base Preflight — Automatic" section above before continuing.
 2. Run: `pwsh "$scriptsDir\my-edit.ps1" -Intent list -Date YYYY-MM-DD` (default today).
 3. Show numbered list. Prompt user which to delete. Confirm destructive action.
 4. Run: `pwsh "$scriptsDir\my-edit.ps1" -Intent remove -Id <id>`.
@@ -136,7 +157,7 @@ The default flow.
 
 ## Flow 5: `/my-logger status` or "what did I log today"
 
-1. **VPN preflight** — automatic.
+1. **API preflight** — run `pwsh "$scriptsDir\my-submit.ps1" -Intent preflight` first. On success, surface the returned `message` verbatim (e.g., "API reachable on public IP 41.33.149.212:3000"). On `BACKEND_DOWN`, follow the escalation in the "API Base Preflight — Automatic" section above before continuing.
 2. Run: `pwsh "$scriptsDir\my-edit.ps1" -Intent list -Date YYYY-MM-DD` (default today).
 3. Show: "Activities for YYYY-MM-DD: 1. [title] project:foo notes:... ; 2. ..." — read-only.
 
@@ -144,7 +165,7 @@ The default flow.
 
 Week sweep. Computes gaps for Sun-Thu and fills each day to reach `totalHours` (default 9h) with role-themed research/self-learning tasks. Adds weekly team meeting on Monday 12:00 if missing.
 
-1. **VPN preflight** — automatic.
+1. **API preflight** — run `pwsh "$scriptsDir\my-submit.ps1" -Intent preflight` first. On success, surface the returned `message` verbatim (e.g., "API reachable on public IP 41.33.149.212:3000"). On `BACKEND_DOWN`, follow the escalation in the "API Base Preflight — Automatic" section above before continuing.
 2. Run: `pwsh "$scriptsDir\my-submit.ps1" -Intent helpme` -> JSON: `{weekStart, role, defaultProjectId, fillerProjectId, totalHours, days:[{date, dayName, holiday, hoursLogged, gap, hasMeeting}]}`.
 3. Parse and show user a per-day table:
    ```
@@ -235,4 +256,4 @@ Existing activities are immutable. The agent MUST NOT delete or re-post existing
 - No projects returned -> suggest `/my-logger init` again or check API permissions.
 - POST fails for one item -> script returns it in `failed[]`, agent reports, ask retry.
 - Script throws PowerShell error -> show raw error, suggest inspecting settings file.
-- `UNREACHABLE` error -> tell user to connect to Egyptian VPN, retry same command.
+- `BACKEND_DOWN` error → run `-Intent preflight` to capture reachability info; surface verbatim, ask user if connected to Egyptian VPN; if NO, tell user to connect and retry; if YES, surface escalation verbatim: back-end is down — contact Ahmed Kamal (Backend Engineer) AKA@corelia.ai or Abdo (Frontend Engineer) AUM@corelia.ai.
