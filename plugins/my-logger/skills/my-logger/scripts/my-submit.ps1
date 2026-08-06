@@ -25,10 +25,9 @@ if ($Intent -eq "helpme") {
     $tz = [string]($settings.timezoneId ?? "Egypt Standard Time")
     $tzInfo = [System.TimeZoneInfo]::FindSystemTimeZoneById($tz)
     $todayLocal = [System.TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $tzInfo).Date
-    $sundayOffset = ([int]$todayLocal.DayOfWeek + 6) % 7
+    $sundayOffset = [int]$todayLocal.DayOfWeek
     $weekStart = $todayLocal.AddDays(-$sundayOffset)
 
-    $workdayNames = @("Sunday","Monday","Tuesday","Wednesday","Thursday")
     $holidays = @()
     if ($HolidaysCSV) { $holidays = @($HolidaysCSV -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
     $totalHours = [double]($settings.totalHours ?? 9)
@@ -41,7 +40,7 @@ if ($Intent -eq "helpme") {
         if ($holidays -contains $dateText) {
             $days += [pscustomobject]@{
                 date = $dateText
-                dayName = $workdayNames[$d]
+                dayName = $day.DayOfWeek.ToString()
                 holiday = $true
                 hoursLogged = 0
                 gap = 0
@@ -65,7 +64,7 @@ if ($Intent -eq "helpme") {
         $gapMin = [Math]::Max(0, $totalMinutes - $minutesLogged)
         $days += [pscustomobject]@{
             date = $dateText
-            dayName = $workdayNames[$d]
+            dayName = $day.DayOfWeek.ToString()
             holiday = $false
             hoursLogged = [Math]::Round($minutesLogged / 60.0, 2)
             gap = [Math]::Round($gapMin / 60.0, 2)
